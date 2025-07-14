@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>QR AR - Donma Özelliği</title>
+  <title>QR AR - Dondur Butonu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -30,12 +30,12 @@
     <a-light type="ambient" intensity="1"></a-light>
     <a-light type="directional" position="0 1 1" intensity="0.5"></a-light>
 
-    <!-- Marker ile takip edilen model -->
+    <!-- Marker takipli model -->
     <a-entity mindar-image-target="targetIndex: 0" id="targetWrapper" rotation="90 90 0">
       <a-gltf-model id="modelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
 
-    <!-- Donmuş ve marker dışı model -->
+    <!-- Donmuş model -->
     <a-entity id="frozenModel" visible="false">
       <a-gltf-model src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
@@ -44,52 +44,57 @@
   <script>
     const freezeButton = document.getElementById('freezeButton');
     const sceneEl = document.querySelector('a-scene');
+
+    // Burada doğru sistem referansını alıyoruz:
+    const mindarSystem = sceneEl.systems['mindar-image'];
+
     const targetWrapper = document.getElementById('targetWrapper');
     const frozenModel = document.getElementById('frozenModel');
 
     let isFrozen = false;
 
-    sceneEl.addEventListener('renderstart', () => {
-      const mindar = sceneEl.systems['mindar-image'];
+    freezeButton.addEventListener('click', () => {
+      if (!mindarSystem) {
+        console.warn('MindAR sistemi henüz hazır değil!');
+        return;
+      }
 
-      freezeButton.addEventListener('click', () => {
-        if (!mindar) {
-          console.warn('MindAR sistemi bulunamadı!');
-          return;
-        }
+      const targetObj = targetWrapper.object3D;
+      const frozenObj = frozenModel.object3D;
 
-        const targetObj = targetWrapper.object3D;
-        const frozenObj = frozenModel.object3D;
+      if (!isFrozen) {
+        console.log('MindAR durduruluyor (pause)...');
+        mindarSystem.pause();
 
-        if (!isFrozen) {
-          mindar.pause();
+        // Marker üzerindeki modelin dünya koordinatlarını al
+        const pos = targetObj.getWorldPosition(new THREE.Vector3());
+        const quat = targetObj.getWorldQuaternion(new THREE.Quaternion());
 
-          // Model pozisyon ve rotasyonunu dünya koordinatlarına göre kopyala
-          const pos = targetObj.getWorldPosition(new THREE.Vector3());
-          const quat = targetObj.getWorldQuaternion(new THREE.Quaternion());
+        // Modeli sahne köküne taşıyoruz (marker'dan çıkartıyoruz)
+        sceneEl.appendChild(frozenModel);
 
-          // frozenModel'ı sahneye ekle ve konum/rotasyonu ayarla
-          sceneEl.appendChild(frozenModel);
-          frozenObj.position.copy(pos);
-          frozenObj.quaternion.copy(quat);
+        // Donmuş model pozisyon ve rotasyonunu ayarla
+        frozenObj.position.copy(pos);
+        frozenObj.quaternion.copy(quat);
 
-          frozenModel.setAttribute('visible', 'true');
-          targetWrapper.setAttribute('visible', 'false');
-          freezeButton.innerText = 'Çöz';
+        frozenModel.setAttribute('visible', 'true');
+        targetWrapper.setAttribute('visible', 'false');
 
-          isFrozen = true;
-        } else {
-          mindar.resume();
+        freezeButton.innerText = 'Çöz';
+        isFrozen = true;
+      } else {
+        console.log('MindAR başlatılıyor (resume)...');
+        mindarSystem.resume();
 
-          // frozenModel'ı tekrar marker altına taşı
-          targetWrapper.appendChild(frozenModel);
-          frozenModel.setAttribute('visible', 'false');
-          targetWrapper.setAttribute('visible', 'true');
-          freezeButton.innerText = 'Dondur';
+        // Modeli tekrar marker altına taşı
+        targetWrapper.appendChild(frozenModel);
 
-          isFrozen = false;
-        }
-      });
+        frozenModel.setAttribute('visible', 'false');
+        targetWrapper.setAttribute('visible', 'true');
+
+        freezeButton.innerText = 'Dondur';
+        isFrozen = false;
+      }
     });
   </script>
 </body>
