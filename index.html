@@ -2,60 +2,60 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>WebAR Model</title>
+  <title>MindAR Kamera Başlatıcı</title>
 
-  <!-- A-Frame ve MindAR -->
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-mindar@0.1.5/dist/aframe-mindar.js"></script>
+  <!-- MindAR -->
+  <script src="https://raw.githack.com/hiukim/mind-ar-js/0.1.5/packages/aframe/dist/aframe-mindar.js"></script>
 
   <style>
-    body { margin: 0; overflow: hidden; }
-    html, body, canvas { width: 100%; height: 100%; }
+    body, html, canvas { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+    #startBtn {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 1em 2em;
+      font-size: 1.5em;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
 
-  <a-scene 
-    mindar-image="imageTargetSrc: qrkod.mind; autoStart: false;" 
-    vr-mode-ui="enabled: false" 
-    device-orientation-permission-ui="enabled: true" 
-    embedded>
+<button id="startBtn">AR'ı Başlat</button>
 
-    <a-assets>
-      <a-asset-item id="model" src="https://raw.githubusercontent.com/ekoc1/KOC/main/model.glb"></a-asset-item>
-    </a-assets>
+<a-scene mindar-image="imageTargetSrc: qrkod.mind; autoStart: false;" embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: true">
+  <a-assets>
+    <a-asset-item id="model" src="https://raw.githubusercontent.com/ekoc1/KOC/main/model.glb"></a-asset-item>
+  </a-assets>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-camera></a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
-      <a-gltf-model src="#model" position="0 0 0" scale="0.5 0.5 0.5"></a-gltf-model>
-    </a-entity>
+  <a-entity mindar-image-target="targetIndex: 0">
+    <a-gltf-model src="#model" scale="0.5 0.5 0.5" position="0 0 0"></a-gltf-model>
+  </a-entity>
+</a-scene>
 
-  </a-scene>
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const scene = document.querySelector('a-scene');
 
-  <script>
-    window.addEventListener('load', () => {
-      const scene = document.querySelector('a-scene');
-
-      // MindAR component hazır mı kontrol et
-      if (scene && scene.components['mindar-image']) {
-        // Kamera izni iste ve al
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(stream => {
-            // Kamera açıldıktan sonra izni kapatıyoruz (akıllıca)
-            stream.getTracks().forEach(track => track.stop());
-
-            // MindAR başlat
-            scene.components['mindar-image'].start();
-          })
-          .catch(err => {
-            alert('Kamera izni verilmedi veya hata oluştu: ' + err.message);
-          });
-      } else {
-        alert("MindAR component'i yüklenmedi.");
-      }
-    });
-  </script>
+  startBtn.addEventListener('click', () => {
+    if (scene && scene.components && scene.components['mindar-image']) {
+      scene.components['mindar-image'].start();
+      startBtn.style.display = 'none'; // Butonu gizle
+    } else {
+      alert('MindAR bileşeni henüz yüklenmedi. Lütfen sayfayı yenileyin.');
+    }
+  });
+</script>
 
 </body>
 </html>
