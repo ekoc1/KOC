@@ -2,47 +2,79 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>AR Freeze Button Test</title>
-  <script src="https://unpkg.com/aframe@1.4.2/dist/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+  <title>QR AR - Dondur Butonu</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
   <button id="freezeButton">Dondur</button>
 
   <a-scene mindar-image="imageTargetSrc: ./qrkod.mind" embedded>
-    <a-camera position="0 0 0" />
-    <a-box position="0 0.5 0" material="color: red;"></a-box>
+    <a-entity id="targetWrapper"></a-entity>
+    <a-entity id="frozenModel" visible="false"></a-entity>
   </a-scene>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const freezeButton = document.getElementById("freezeButton");
-      const sceneEl = document.querySelector("a-scene");
+    window.addEventListener('load', () => {
+      console.log('Sayfa yüklendi, event listener eklendi.');
 
-      console.log("Sayfa yüklendi, event listener eklendi.");
-      console.log("FreezeButton:", freezeButton);
-      console.log("Scene element:", sceneEl);
+      const freezeButton = document.getElementById('freezeButton');
+      console.log('FreezeButton:', freezeButton);
 
-      freezeButton.addEventListener("click", () => {
-        // mindar-image component'ını alıyoruz
-        const mindarComponent = sceneEl.components["mindar-image"];
-        if (!mindarComponent) {
-          console.error("mindar-image component bulunamadı.");
+      const sceneEl = document.querySelector('a-scene');
+      console.log('Scene element:', sceneEl);
+
+      sceneEl.addEventListener('mindar-initialized', () => {
+        console.log('mindar-initialized eventi tetiklendi');
+
+        const mindar = sceneEl.components['mindar-image'];
+        if (!mindar) {
+          console.warn('MindAR component bulunamadı.');
           return;
         }
-        if (!mindarComponent.isStarted) {
-          console.log("MindAR başlatılıyor.");
-          mindarComponent.start();
-          return;
-        }
-        // start ise freeze toggle yapalım
-        if (mindarComponent.isPaused) {
-          mindarComponent.unpause();
-          console.log("Unfreeze yapıldı.");
-        } else {
-          mindarComponent.pause();
-          console.log("Freeze yapıldı.");
-        }
+        const targetWrapper = document.getElementById('targetWrapper');
+        const frozenModel = document.getElementById('frozenModel');
+        const frozenModelObj = frozenModel.object3D;
+        const targetObj = targetWrapper.object3D;
+
+        let isFrozen = false;
+
+        freezeButton.addEventListener('click', () => {
+          console.log('Dondur butonuna tıklandı');
+          if (!mindar) {
+            console.warn('MindAR component bulunamadı.');
+            return;
+          }
+
+          if (!isFrozen) {
+            mindar.pause();
+
+            const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
+            const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
+
+            frozenModel.setAttribute('visible', 'true');
+
+            frozenModelObj.position.copy(worldPos);
+            frozenModelObj.quaternion.copy(worldQuat);
+
+            sceneEl.appendChild(frozenModel);
+
+            targetWrapper.setAttribute('visible', 'false');
+
+            isFrozen = true;
+            console.log('Model donduruldu.');
+          } else {
+            mindar.play();
+
+            frozenModel.setAttribute('visible', 'false');
+
+            targetWrapper.setAttribute('visible', 'true');
+
+            isFrozen = false;
+            console.log('Model çözülüp hareket etti.');
+          }
+        });
       });
     });
   </script>
