@@ -44,7 +44,7 @@
 
     <!-- Donmuş Model -->
     <a-entity id="frozenModel" visible="false">
-      <a-gltf-model src="#model" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
   </a-scene>
 
@@ -87,7 +87,8 @@
             frozenModelObj.position.copy(worldPos);
             frozenModelObj.quaternion.copy(worldQuat);
 
-            sceneEl.appendChild(frozenModel);
+            // frozenModel'i sahnede bırakıyoruz, append/remove yapmaya gerek yok
+
             targetWrapper.setAttribute('visible', 'false');
             freezeButton.innerText = 'Çöz';
 
@@ -97,7 +98,6 @@
             mindar.resume();
             console.log("▶️ Marker takibi devam ediyor");
 
-            targetWrapper.appendChild(frozenModel);
             frozenModel.setAttribute('visible', 'false');
             targetWrapper.setAttribute('visible', 'true');
             freezeButton.innerText = 'Dondur';
