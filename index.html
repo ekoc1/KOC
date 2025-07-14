@@ -44,47 +44,48 @@
   <script>
     const freezeButton = document.getElementById('freezeButton');
     const sceneEl = document.querySelector('a-scene');
-    const mindar = sceneEl.components['mindar-image'];
     const targetWrapper = document.getElementById('targetWrapper');
     const frozenModel = document.getElementById('frozenModel');
 
     let isFrozen = false;
 
-    freezeButton.addEventListener('click', () => {
-      if (!mindar) return;
+    sceneEl.addEventListener('renderstart', () => {
+      const mindar = sceneEl.components['mindar-image'];
 
-      const targetObj = targetWrapper.object3D;
-      const frozenObj = frozenModel.object3D;
+      freezeButton.addEventListener('click', () => {
+        if (!mindar) return;
 
-      if (!isFrozen) {
-        mindar.pause();
+        const targetObj = targetWrapper.object3D;
+        const frozenObj = frozenModel.object3D;
 
-        const pos = targetObj.getWorldPosition(new THREE.Vector3());
-        const quat = targetObj.getWorldQuaternion(new THREE.Quaternion());
+        if (!isFrozen) {
+          mindar.pause();
 
-        // Modeli sahneye taşı
-        sceneEl.appendChild(frozenModel);
+          const pos = targetObj.getWorldPosition(new THREE.Vector3());
+          const quat = targetObj.getWorldQuaternion(new THREE.Quaternion());
 
-        frozenObj.position.copy(pos);
-        frozenObj.quaternion.copy(quat);
+          sceneEl.appendChild(frozenModel);
 
-        frozenModel.setAttribute('visible', 'true');
-        targetWrapper.setAttribute('visible', 'false');
-        freezeButton.innerText = 'Çöz';
+          frozenObj.position.copy(pos);
+          frozenObj.quaternion.copy(quat);
 
-        isFrozen = true;
-      } else {
-        mindar.resume();
+          frozenModel.setAttribute('visible', 'true');
+          targetWrapper.setAttribute('visible', 'false');
+          freezeButton.innerText = 'Çöz';
 
-        // Modeli tekrar marker altına taşı
-        targetWrapper.appendChild(frozenModel);
+          isFrozen = true;
+        } else {
+          mindar.resume();
 
-        frozenModel.setAttribute('visible', 'false');
-        targetWrapper.setAttribute('visible', 'true');
-        freezeButton.innerText = 'Dondur';
+          targetWrapper.appendChild(frozenModel);
 
-        isFrozen = false;
-      }
+          frozenModel.setAttribute('visible', 'false');
+          targetWrapper.setAttribute('visible', 'true');
+          freezeButton.innerText = 'Dondur';
+
+          isFrozen = false;
+        }
+      });
     });
   </script>
 </body>
