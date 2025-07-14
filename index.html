@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>WebAR Model</title>
 
-  <!-- A-Frame ve MindAR -->
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aframe-mindar@0.1.7/dist/aframe-mindar.min.js"></script>
 
@@ -15,13 +14,13 @@
 </head>
 <body>
   <a-scene
-    mindar-image="imageTargetSrc: qrkod.mind; autoStart: true;"
+    mindar-image="imageTargetSrc: qrkod.mind; autoStart: false;"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: true"
     embedded>
 
     <a-assets>
-      <a-asset-item id="model" src="https://raw.githubusercontent.com/ekoc1/KOC/main/model.glb"></a-asset-item>
+      <a-asset-item id="model" src="model.glb"></a-asset-item>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -31,5 +30,23 @@
     </a-entity>
 
   </a-scene>
+
+  <script>
+    // Sayfa yüklendiğinde hemen kamera izni isteyelim
+    window.addEventListener('load', () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          // İzin verildi, stream kullanmıyoruz ama kapatalım
+          stream.getTracks().forEach(track => track.stop());
+
+          // MindAR'ı başlat
+          const scene = document.querySelector('a-scene');
+          scene.components['mindar-image'].start();
+        })
+        .catch(err => {
+          alert('Kamera izni verilmedi veya hata oluştu: ' + err.message);
+        });
+    });
+  </script>
 </body>
 </html>
