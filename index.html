@@ -1,39 +1,66 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>QR AR - Dondur Butonu</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
+    canvas, a-scene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
+    #freezeButton {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 999;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
+
   <button id="freezeButton">Dondur</button>
 
-  <a-scene mindar-image="imageTargetSrc: ./qrkod.mind" embedded>
-    <!-- Buraya model ve marker elementlerin gelmeli -->
-    <a-entity id="targetWrapper"></a-entity>
-    <a-entity id="frozenModel" visible="false"></a-entity>
+  <a-scene mindar-image="imageTargetSrc: ./qrkod.mind;" embedded>
+    <a-assets>
+      <a-asset-item id="model" src="./model.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera look-controls="enabled: true"></a-camera>
+    <a-light type="ambient" intensity="1"></a-light>
+    <a-light type="directional" position="0 1 1" intensity="0.5"></a-light>
+
+    <!-- Marker Takipli Model -->
+    <a-entity mindar-image-target="targetIndex: 0" id="targetWrapper" rotation="90 90 0">
+      <a-gltf-model id="modelEntity" src="#model" scale="5 5 5"></a-gltf-model>
+    </a-entity>
+
+    <!-- Donmuş Model -->
+    <a-entity id="frozenModel" visible="false">
+      <a-gltf-model src="#model" scale="5 5 5"></a-gltf-model>
+    </a-entity>
   </a-scene>
 
   <script>
     window.addEventListener('load', () => {
-      console.log('Sayfa yüklendi, event listener eklendi.');
-
       const freezeButton = document.getElementById('freezeButton');
-      console.log('FreezeButton:', freezeButton);
-
       const sceneEl = document.querySelector('a-scene');
-      console.log('Scene element:', sceneEl);
 
       sceneEl.addEventListener('mindar-initialized', () => {
-        console.log('mindar-initialized eventi tetiklendi');
+        console.log("✔️ MindAR başlatıldı");
 
         const mindar = sceneEl.components['mindar-image'];
         if (!mindar) {
-          console.warn('MindAR component bulunamadı.');
-          return;
+          console.warn("❗ MindAR component bulunamadı.");
         }
+
         const targetWrapper = document.getElementById('targetWrapper');
         const frozenModel = document.getElementById('frozenModel');
         const frozenModelObj = frozenModel.object3D;
@@ -42,45 +69,41 @@
         let isFrozen = false;
 
         freezeButton.addEventListener('click', () => {
-          console.log('Dondur butonuna tıklandı');
+          console.log("🔘 Dondur/Çöz butonuna tıklandı");
+
           if (!mindar) {
-            console.warn('MindAR component bulunamadı.');
+            console.warn("❗ MindAR component erişilemedi!");
             return;
           }
 
           if (!isFrozen) {
             mindar.pause();
+            console.log("⏸️ Marker takibi durduruldu");
 
-            // Dünya pozisyon ve rotasyonunu al
             const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
             const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
 
-            // frozenModel görünür olsun
             frozenModel.setAttribute('visible', 'true');
-
-            // Pozisyon ve rotasyon kopyala
             frozenModelObj.position.copy(worldPos);
             frozenModelObj.quaternion.copy(worldQuat);
 
-            // frozenModel'ü scene root'a taşı
             sceneEl.appendChild(frozenModel);
-
-            // marker altındaki modeli gizle
             targetWrapper.setAttribute('visible', 'false');
+            freezeButton.innerText = 'Çöz';
 
+            console.log("✅ Model dondu ve sahnede sabitlendi");
             isFrozen = true;
-            console.log('Model donduruldu.');
           } else {
-            mindar.play();
+            mindar.resume();
+            console.log("▶️ Marker takibi devam ediyor");
 
-            // frozenModel gizle
+            targetWrapper.appendChild(frozenModel);
             frozenModel.setAttribute('visible', 'false');
-
-            // marker altındaki modeli göster
             targetWrapper.setAttribute('visible', 'true');
+            freezeButton.innerText = 'Dondur';
 
+            console.log("🔄 Model tekrar marker ile takip ediliyor");
             isFrozen = false;
-            console.log('Model çözülüp hareket etti.');
           }
         });
       });
