@@ -35,14 +35,32 @@
       <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
       <a-light type="directional" color="#ffffff" intensity="0.5" position="0 1 1"></a-light>
 
-      <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity mindar-image-target="targetIndex: 0" id="targetEntity" rotation="0 0 0">
         <a-gltf-model
+          id="modelEntity"
           src="#model"
-          position="0 0 0"
-          scale="1 1 1"
-          rotation="0 180 180"
+          position="0 0.1 0"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
         ></a-gltf-model>
       </a-entity>
     </a-scene>
+
+    <script>
+      const targetEntity = document.querySelector('#targetEntity');
+      let yRotation = 0;
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') {
+          yRotation += 10;
+          if (yRotation >= 360) yRotation -= 360;
+          targetEntity.setAttribute('rotation', `0 ${yRotation} 0`);
+        } else if (e.key === 'ArrowLeft') {
+          yRotation -= 10;
+          if (yRotation < 0) yRotation += 360;
+          targetEntity.setAttribute('rotation', `0 ${yRotation} 0`);
+        }
+      });
+    </script>
   </body>
 </html>
