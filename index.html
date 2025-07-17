@@ -53,58 +53,56 @@
 
   </a-scene>
 
-  <script>
+<script>
   document.addEventListener('DOMContentLoaded', () => {
     const freezeButton = document.getElementById('freezeButton');
     const sceneEl = document.querySelector('a-scene');
 
     let isFrozen = false;
     let mindar;
-    let targetWrapper, frozenModel, frozenModelObj, targetObj;
+    let targetWrapper, frozenModel, targetObj, frozenModelObj;
 
-    sceneEl.addEventListener('mindar-started', () => {
-      console.log("MindAR başladı (mindar-started)");
-
+    const waitForMindAR = setInterval(() => {
       mindar = sceneEl.components['mindar-image'];
-      targetWrapper = document.getElementById('targetWrapper');
-      frozenModel = document.getElementById('frozenModel');
+      if (mindar && mindar.video) {
+        console.log("MindAR başarıyla bulundu!");
+        clearInterval(waitForMindAR); // Artık sürekli kontrol etmeye gerek yok
 
-      targetObj = targetWrapper.object3D;
-      frozenModelObj = frozenModel.object3D;
-    });
+        targetWrapper = document.getElementById('targetWrapper');
+        frozenModel = document.getElementById('frozenModel');
+        targetObj = targetWrapper.object3D;
+        frozenModelObj = frozenModel.object3D;
 
-    freezeButton.addEventListener('click', () => {
-      if (!mindar) {
-        console.warn("MindAR henüz başlatılamadı.");
-        return;
+        freezeButton.addEventListener('click', () => {
+          if (!mindar) {
+            console.warn("MindAR erişilemiyor.");
+            return;
+          }
+
+          if (!isFrozen) {
+            mindar.pause();
+
+            const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
+            const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
+
+            frozenModel.setAttribute('visible', 'true');
+            frozenModelObj.position.copy(worldPos);
+            frozenModelObj.quaternion.copy(worldQuat);
+
+            targetWrapper.setAttribute('visible', 'false');
+            freezeButton.innerText = 'Çöz';
+            isFrozen = true;
+          } else {
+            mindar.resume();
+
+            frozenModel.setAttribute('visible', 'false');
+            targetWrapper.setAttribute('visible', 'true');
+            freezeButton.innerText = 'Dondur';
+            isFrozen = false;
+          }
+        });
       }
-
-      if (!isFrozen) {
-        mindar.pause();
-        console.log("Takip durdu");
-
-        const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
-        const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
-
-        frozenModel.setAttribute('visible', 'true');
-        frozenModelObj.position.copy(worldPos);
-        frozenModelObj.quaternion.copy(worldQuat);
-
-        targetWrapper.setAttribute('visible', 'false');
-
-        freezeButton.innerText = 'Çöz';
-        isFrozen = true;
-      } else {
-        mindar.resume();
-        console.log("Takip tekrar başladı");
-
-        frozenModel.setAttribute('visible', 'false');
-        targetWrapper.setAttribute('visible', 'true');
-
-        freezeButton.innerText = 'Dondur';
-        isFrozen = false;
-      }
-    });
+    }, 500); // 500ms'de bir kontrol et
   });
 </script>
 
