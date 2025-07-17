@@ -44,12 +44,12 @@
 
     <a-camera look-controls="enabled: false"></a-camera>
 
-    <!-- Marker'a bağlı model -->
+    <!-- Marker ile takip edilen model -->
     <a-entity mindar-image-target="targetIndex: 0" id="targetWrapper">
       <a-gltf-model id="modelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
 
-    <!-- Donmuş model -->
+    <!-- Donmuş model, başlangıçta görünmez -->
     <a-entity id="frozenModel" visible="false">
       <a-gltf-model id="frozenModelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
@@ -70,7 +70,6 @@
         const targetObj = targetWrapper.object3D;
         const frozenObj = frozenModel.object3D;
 
-        // Marker eventleri
         targetWrapper.addEventListener('targetFound', () => {
           console.log("📍 Marker bulundu!");
           if (!isFrozen) {
@@ -86,11 +85,11 @@
           }
         });
 
-        // Dondur/Çöz butonu
         freezeButton.addEventListener('click', () => {
           console.log("🔘 Butona basıldı!");
 
           if (!isFrozen) {
+            // Marker modelin pozisyonu ve rotasyonu alınır
             const worldPos = new THREE.Vector3();
             const worldQuat = new THREE.Quaternion();
 
@@ -100,23 +99,32 @@
             console.log("📌 Donmuş Pozisyon:", worldPos);
             console.log("📌 Donmuş Rotasyon:", worldQuat);
 
-            frozenObj.position.copy(worldPos);
-            frozenObj.quaternion.copy(worldQuat);
+            // Donmuş modelin 3D nesnesine ulaş
+            const frozenModel3D = frozenModel.object3D;
 
-            const targetModelEntity = document.getElementById('modelEntity');
-            frozenModelEntity.setAttribute('scale', targetModelEntity.getAttribute('scale'));
+            // Pozisyon ve rotasyon aktar
+            frozenModel3D.position.copy(worldPos);
+            frozenModel3D.quaternion.copy(worldQuat);
 
-            // Marker'dan bağımsızlaştır
-            sceneEl.object3D.add(frozenObj);
+            // Ölçekleme aktarımı
+            const targetScale = document.getElementById('modelEntity').getAttribute('scale');
+            frozenModelEntity.setAttribute('scale', targetScale);
+
+            // Donmuş modeli doğrudan sahneye ekle (critical fix)
+            sceneEl.object3D.add(frozenModel3D);
 
             frozenModel.setAttribute('visible', 'true');
+            targetWrapper.setAttribute('visible', 'false');
+
             freezeButton.innerText = 'Çöz';
             isFrozen = true;
 
           } else {
-            // Geri çöz
-            sceneEl.object3D.remove(frozenObj);
+            // Çözme işlemi
+            sceneEl.object3D.remove(frozenModel.object3D);
             frozenModel.setAttribute('visible', 'false');
+            targetWrapper.setAttribute('visible', 'true');
+
             freezeButton.innerText = 'Dondur';
             isFrozen = false;
           }
