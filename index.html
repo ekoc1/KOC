@@ -48,7 +48,7 @@
 
     <!-- Donmuş model -->
     <a-entity id="frozenModel" visible="false">
-      <a-gltf-model src="#model" scale="5 5 5"></a-gltf-model>
+      <a-gltf-model id="frozenModelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -63,11 +63,12 @@
     sceneEl.addEventListener('loaded', () => {
       const targetWrapper = document.getElementById('targetWrapper');
       const frozenModel = document.getElementById('frozenModel');
+      const frozenModelEntity = document.getElementById('frozenModelEntity');
 
       const targetObj = targetWrapper.object3D;
       const frozenObj = frozenModel.object3D;
 
-      // Marker loglaması (gözlem amaçlı)
+      // Marker loglaması
       targetWrapper.addEventListener('targetFound', () => {
         console.log("📍 Marker bulundu!");
       });
@@ -93,18 +94,22 @@
           frozenObj.position.copy(worldPos);
           frozenObj.quaternion.copy(worldQuat);
 
-          console.log("Frozen model pozisyonu:", frozenObj.position);
-          console.log("Frozen model rotasyonu:", frozenObj.quaternion);
+          // frozenModel görünür yap
+          frozenModel.object3D.visible = true;
 
-          frozenModel.setAttribute('visible', 'true');
-          targetWrapper.setAttribute('visible', 'false');
+          // targetWrapper görünmez yap
+          targetWrapper.object3D.visible = false;
+
+          // frozen modelin scale değerini ayarla (gerekirse)
+          const targetModelEntity = document.getElementById('modelEntity');
+          frozenModelEntity.setAttribute('scale', targetModelEntity.getAttribute('scale'));
 
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
 
         } else {
-          frozenModel.setAttribute('visible', 'false');
-          targetWrapper.setAttribute('visible', 'true');
+          frozenModel.object3D.visible = false;
+          targetWrapper.object3D.visible = true;
           freezeButton.innerText = 'Dondur';
           isFrozen = false;
         }
