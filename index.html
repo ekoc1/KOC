@@ -59,22 +59,29 @@
     const sceneEl = document.querySelector('a-scene');
 
     let isFrozen = false;
+    let mindar;
+    let targetWrapper, frozenModel, frozenModelObj, targetObj;
+
+    sceneEl.addEventListener('mindar-started', () => {
+      console.log("MindAR başladı (mindar-started)");
+
+      mindar = sceneEl.components['mindar-image'];
+      targetWrapper = document.getElementById('targetWrapper');
+      frozenModel = document.getElementById('frozenModel');
+
+      targetObj = targetWrapper.object3D;
+      frozenModelObj = frozenModel.object3D;
+    });
 
     freezeButton.addEventListener('click', () => {
-      const mindar = sceneEl.components['mindar-image'];
-      const targetWrapper = document.getElementById('targetWrapper');
-      const frozenModel = document.getElementById('frozenModel');
-
-      if (!mindar || !mindar.started) {
-        console.warn("MindAR henüz başlamadı.");
+      if (!mindar) {
+        console.warn("MindAR henüz başlatılamadı.");
         return;
       }
 
-      const targetObj = targetWrapper.object3D;
-      const frozenModelObj = frozenModel.object3D;
-
       if (!isFrozen) {
         mindar.pause();
+        console.log("Takip durdu");
 
         const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
         const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
@@ -87,20 +94,20 @@
 
         freezeButton.innerText = 'Çöz';
         isFrozen = true;
-        console.log("Model donduruldu.");
       } else {
         mindar.resume();
+        console.log("Takip tekrar başladı");
 
         frozenModel.setAttribute('visible', 'false');
         targetWrapper.setAttribute('visible', 'true');
 
         freezeButton.innerText = 'Dondur';
         isFrozen = false;
-        console.log("Model çözüldü.");
       }
     });
   });
 </script>
+
 
 </body>
 </html>
