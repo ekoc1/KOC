@@ -39,18 +39,20 @@
       <a-asset-item id="model" src="./model.glb"></a-asset-item>
     </a-assets>
 
+    <!-- Işık ekleyelim ki model her zaman görünür olsun -->
     <a-light type="ambient" color="#fff"></a-light>
+    <a-light type="directional" color="#fff" position="1 1 1"></a-light>
 
     <a-camera look-controls="enabled: false"></a-camera>
 
     <!-- Marker ile takip edilen model -->
     <a-entity mindar-image-target="targetIndex: 0" id="targetWrapper">
-      <a-gltf-model id="modelEntity" src="#model" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model id="modelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
 
-    <!-- Donmuş model (marker dışı, sahnede sabit) -->
+    <!-- Donmuş model -->
     <a-entity id="frozenModel" visible="false">
-      <a-gltf-model id="frozenModelEntity" src="#model" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model id="frozenModelEntity" src="#model" scale="5 5 5"></a-gltf-model>
     </a-entity>
 
   </a-scene>
@@ -70,54 +72,71 @@
       const targetObj = targetWrapper.object3D;
       const frozenObj = frozenModel.object3D;
 
+      // Marker bulundu
       targetWrapper.addEventListener('targetFound', () => {
         console.log("📍 Marker bulundu!");
         if (!isFrozen) {
-          targetWrapper.object3D.visible = true;
-          frozenModel.object3D.visible = false;
+          targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
+          frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
         }
       });
 
+      // Marker kayboldu
       targetWrapper.addEventListener('targetLost', () => {
         console.log("❌ Marker kayboldu!");
         if (!isFrozen) {
-          targetWrapper.object3D.visible = false;
+          targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
         } else {
-          // Dondurulmuş model görünür kalmalı marker kaybolsa bile
-          targetWrapper.object3D.visible = false;
-          frozenModel.object3D.visible = true;
+          // Dondurulmuş model gösterilmeye devam edilmeli
+          frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
         }
       });
 
+      // Dondur/Çöz butonu
       freezeButton.addEventListener('click', () => {
         console.log("🔘 Butona basıldı!");
 
         if (!isFrozen) {
+          // Marker modelin dünya konum ve yönelimini al
           const worldPos = new THREE.Vector3();
           const worldQuat = new THREE.Quaternion();
 
           targetObj.getWorldPosition(worldPos);
           targetObj.getWorldQuaternion(worldQuat);
 
-          console.log("Dondurulan pozisyon:", worldPos);
-          console.log("Dondurulan rotasyon:", worldQuat);
+          console.log("📌 Donmuş Pozisyon:", worldPos);
+          console.log("📌 Donmuş Rotasyon:", worldQuat);
 
+          // Donmuş modelin pozisyonunu ve yönünü ayarla
           frozenObj.position.copy(worldPos);
           frozenObj.quaternion.copy(worldQuat);
 
-          frozenModel.object3D.visible = true;
-          targetWrapper.object3D.visible = false;
-
-          // frozen model scale ayarı (gerekirse)
+          // Scale aynı olsun
           const targetModelEntity = document.getElementById('modelEntity');
           frozenModelEntity.setAttribute('scale', targetModelEntity.getAttribute('scale'));
+
+          // Görünürlükleri ayarla
+          frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
+
+          targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
 
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
 
         } else {
-          frozenModel.object3D.visible = false;
-          targetWrapper.object3D.visible = true;
+          // Donmuş model kapatılır, marker model aktif edilir
+          frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
+
+          targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
+
           freezeButton.innerText = 'Dondur';
           isFrozen = false;
         }
