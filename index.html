@@ -54,69 +54,53 @@
   </a-scene>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const freezeButton = document.getElementById('freezeButton');
-      const sceneEl = document.querySelector('a-scene');
+  document.addEventListener('DOMContentLoaded', () => {
+    const freezeButton = document.getElementById('freezeButton');
+    const sceneEl = document.querySelector('a-scene');
 
-      let mindar = null;
-      let isFrozen = false;
-      let targetWrapper, frozenModel, frozenModelObj, targetObj;
+    let isFrozen = false;
 
-      // MindAR başlatıldığında elementlere eriş
-      sceneEl.addEventListener('mindar-initialized', () => {
-        console.log("MindAR başlatıldı");
+    freezeButton.addEventListener('click', () => {
+      const mindar = sceneEl.components['mindar-image'];
+      const targetWrapper = document.getElementById('targetWrapper');
+      const frozenModel = document.getElementById('frozenModel');
 
-        mindar = sceneEl.components['mindar-image'];
-        if (!mindar) {
-          console.warn("MindAR component bulunamadı!");
-          return;
-        }
+      if (!mindar || !mindar.started) {
+        console.warn("MindAR henüz başlamadı.");
+        return;
+      }
 
-        targetWrapper = document.getElementById('targetWrapper');
-        frozenModel = document.getElementById('frozenModel');
-        frozenModelObj = frozenModel.object3D;
-        targetObj = targetWrapper.object3D;
+      const targetObj = targetWrapper.object3D;
+      const frozenModelObj = frozenModel.object3D;
 
-        freezeButton.addEventListener('click', () => {
-          if (!mindar) {
-            console.warn("MindAR component erişilemedi!");
-            return;
-          }
+      if (!isFrozen) {
+        mindar.pause();
 
-          if (!isFrozen) {
-            mindar.pause();
-            console.log("Marker takibi durduruldu");
+        const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
+        const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
 
-            // Modelin dünya konum ve rotasyonunu al
-            const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
-            const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
+        frozenModel.setAttribute('visible', 'true');
+        frozenModelObj.position.copy(worldPos);
+        frozenModelObj.quaternion.copy(worldQuat);
 
-            // Donmuş model görünür yap, pozisyonu kopyala
-            frozenModel.setAttribute('visible', 'true');
-            frozenModelObj.position.copy(worldPos);
-            frozenModelObj.quaternion.copy(worldQuat);
+        targetWrapper.setAttribute('visible', 'false');
 
-            // Marker takipli model görünmez yap
-            targetWrapper.setAttribute('visible', 'false');
+        freezeButton.innerText = 'Çöz';
+        isFrozen = true;
+        console.log("Model donduruldu.");
+      } else {
+        mindar.resume();
 
-            freezeButton.innerText = 'Çöz';
-            isFrozen = true;
-            console.log("Model dondu ve sahnede sabitlendi");
-          } else {
-            mindar.resume();
-            console.log("Marker takibi devam ediyor");
+        frozenModel.setAttribute('visible', 'false');
+        targetWrapper.setAttribute('visible', 'true');
 
-            frozenModel.setAttribute('visible', 'false');
-            targetWrapper.setAttribute('visible', 'true');
-
-            freezeButton.innerText = 'Dondur';
-            isFrozen = false;
-            console.log("Model tekrar marker ile takip ediliyor");
-          }
-        });
-      });
+        freezeButton.innerText = 'Dondur';
+        isFrozen = false;
+        console.log("Model çözüldü.");
+      }
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>
