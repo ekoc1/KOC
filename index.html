@@ -67,7 +67,7 @@
       const targetObj = targetWrapper.object3D;
       const frozenObj = frozenModel.object3D;
 
-      // Marker loglaması (gözlem amaçlı)
+      // Marker loglaması
       targetWrapper.addEventListener('targetFound', () => {
         console.log("📍 Marker bulundu!");
       });
@@ -87,11 +87,11 @@
           targetObj.getWorldPosition(worldPos);
           targetObj.getWorldQuaternion(worldQuat);
 
-          // Donmuş modeli sahneye bağla ve kopyala
-          sceneEl.object3D.attach(frozenObj);
+          // Donmuş modelin pozisyon ve rotasyonunu güncelle
           frozenObj.position.copy(worldPos);
           frozenObj.quaternion.copy(worldQuat);
 
+          // Donmuş modeli göster, orijinali gizle
           frozenModel.setAttribute('visible', 'true');
           targetWrapper.setAttribute('visible', 'false');
 
@@ -101,7 +101,7 @@
           isFrozen = true;
 
         } else {
-          // Geri marker moduna dön
+          // Donmuş modeli gizle, orijinali göster
           frozenModel.setAttribute('visible', 'false');
           targetWrapper.setAttribute('visible', 'true');
           freezeButton.innerText = 'Dondur';
