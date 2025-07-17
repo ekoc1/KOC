@@ -38,7 +38,6 @@
       <a-asset-item id="model" src="./model.glb"></a-asset-item>
     </a-assets>
 
-    <!-- Işıklar -->
     <a-light type="ambient" color="#fff"></a-light>
     <a-light type="directional" color="#fff" position="1 1 1"></a-light>
 
@@ -75,6 +74,7 @@
           if (!isFrozen) {
             targetWrapper.setAttribute('visible', 'true');
             frozenModel.setAttribute('visible', 'false');
+            frozenObj.visible = false;
           }
         });
 
@@ -82,6 +82,7 @@
           console.log("❌ Marker kayboldu!");
           if (!isFrozen) {
             targetWrapper.setAttribute('visible', 'false');
+            targetObj.visible = false;
           }
         });
 
@@ -89,7 +90,7 @@
           console.log("🔘 Butona basıldı!");
 
           if (!isFrozen) {
-            // Marker modelin pozisyonu ve rotasyonu alınır
+            // Marker'dan pozisyon ve yön al
             const worldPos = new THREE.Vector3();
             const worldQuat = new THREE.Quaternion();
 
@@ -99,31 +100,32 @@
             console.log("📌 Donmuş Pozisyon:", worldPos);
             console.log("📌 Donmuş Rotasyon:", worldQuat);
 
-            // Donmuş modelin 3D nesnesine ulaş
-            const frozenModel3D = frozenModel.object3D;
+            // Pozisyon, yön ve scale ayarlanıyor
+            frozenObj.position.copy(worldPos);
+            frozenObj.quaternion.copy(worldQuat);
 
-            // Pozisyon ve rotasyon aktar
-            frozenModel3D.position.copy(worldPos);
-            frozenModel3D.quaternion.copy(worldQuat);
-
-            // Ölçekleme aktarımı
             const targetScale = document.getElementById('modelEntity').getAttribute('scale');
             frozenModelEntity.setAttribute('scale', targetScale);
 
-            // Donmuş modeli doğrudan sahneye ekle (critical fix)
-            sceneEl.object3D.add(frozenModel3D);
+            // Sahneye object3D olarak ekleniyor (en önemli adım!)
+            sceneEl.object3D.add(frozenObj);
 
             frozenModel.setAttribute('visible', 'true');
+            frozenObj.visible = true;
+
             targetWrapper.setAttribute('visible', 'false');
+            targetObj.visible = false;
 
             freezeButton.innerText = 'Çöz';
             isFrozen = true;
-
           } else {
-            // Çözme işlemi
-            sceneEl.object3D.remove(frozenModel.object3D);
+            // Çöz: sahneden çıkar
+            sceneEl.object3D.remove(frozenObj);
             frozenModel.setAttribute('visible', 'false');
+            frozenObj.visible = false;
+
             targetWrapper.setAttribute('visible', 'true');
+            targetObj.visible = true;
 
             freezeButton.innerText = 'Dondur';
             isFrozen = false;
