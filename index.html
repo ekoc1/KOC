@@ -65,7 +65,7 @@
     const waitForMindAR = setInterval(() => {
       mindar = sceneEl.components['mindar-image'];
       if (mindar && mindar.video) {
-        console.log("MindAR başarıyla bulundu!");
+        console.log("MindAR başarıyla bulundu!", mindar);
         clearInterval(waitForMindAR);
 
         targetWrapper = document.getElementById('targetWrapper');
@@ -74,13 +74,15 @@
         frozenModelObj = frozenModel.object3D;
 
         freezeButton.addEventListener('click', () => {
+          console.log('Butona basıldı');
           if (!mindar) {
             console.warn("MindAR erişilemiyor.");
             return;
           }
 
           if (!isFrozen) {
-            mindar.stop();
+            console.log('Donduruluyor...');
+            mindar.pause();
 
             const worldPos = targetObj.getWorldPosition(new THREE.Vector3());
             const worldQuat = targetObj.getWorldQuaternion(new THREE.Quaternion());
@@ -93,7 +95,8 @@
             freezeButton.innerText = 'Çöz';
             isFrozen = true;
           } else {
-            mindar.start();
+            console.log('Çözülüyor...');
+            mindar.resume();
 
             frozenModel.setAttribute('visible', 'false');
             targetWrapper.setAttribute('visible', 'true');
