@@ -61,44 +61,42 @@
     let isFrozen = false;
 
     sceneEl.addEventListener('loaded', () => {
-      const mindar = sceneEl.components['mindar-image'];
-      if (!mindar) {
-        console.warn('MindAR bileşeni bulunamadı!');
-        return;
-      }
-      
+      const mindarComponent = sceneEl.components['mindar-image'];
       const targetWrapper = document.getElementById('targetWrapper');
       const frozenModel = document.getElementById('frozenModel');
-
       const targetObj = targetWrapper.object3D;
-      const frozenModelObj = frozenModel.object3D;
+      const frozenObj = frozenModel.object3D;
+
+      // Marker eventlerini takip et (kontrol amaçlı)
+      targetWrapper.addEventListener('targetFound', () => {
+        console.log('📍 Marker bulundu!');
+      });
+      targetWrapper.addEventListener('targetLost', () => {
+        console.log('❌ Marker kayboldu!');
+      });
 
       freezeButton.addEventListener('click', () => {
-        console.log('Butona basıldı');
-        if (!mindar) {
-          console.warn('MindAR erişilemiyor!');
-          return;
-        }
+        console.log('🔘 Butona basıldı');
 
         if (!isFrozen) {
-          if (typeof mindar.stop === 'function') mindar.stop();
-
+          // Marker'dan pozisyon al
           const worldPos = new AFRAME.THREE.Vector3();
           const worldQuat = new AFRAME.THREE.Quaternion();
-
           targetObj.getWorldPosition(worldPos);
           targetObj.getWorldQuaternion(worldQuat);
 
+          // Donmuş modeli sahneye yerleştir
           frozenModel.setAttribute('visible', 'true');
-          frozenModelObj.position.copy(worldPos);
-          frozenModelObj.quaternion.copy(worldQuat);
+          frozenObj.position.copy(worldPos);
+          frozenObj.quaternion.copy(worldQuat);
 
+          // Marker takibini gizle
           targetWrapper.setAttribute('visible', 'false');
+
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
         } else {
-          if (typeof mindar.start === 'function') mindar.start();
-
+          // Marker tekrar takip etsin
           frozenModel.setAttribute('visible', 'false');
           targetWrapper.setAttribute('visible', 'true');
           freezeButton.innerText = 'Dondur';
