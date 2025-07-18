@@ -77,7 +77,10 @@
         console.log("📍 Marker bulundu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
+
           frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
         }
       });
 
@@ -85,33 +88,51 @@
         console.log("❌ Marker kayboldu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
         } else {
+          // Dondurulmuş model görünür kalmalı
           frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
         }
       });
 
       freezeButton.addEventListener('click', () => {
+        console.log("🔘 Butona basıldı!");
+
         if (!isFrozen) {
-          // THREE nesnelerini window.THREE olarak kullan
-          const worldPos = new window.THREE.Vector3();
-          const worldQuat = new window.THREE.Quaternion();
+          // Marker modelin dünya konum ve yönelimini al
+          const worldPos = new THREE.Vector3();
+          const worldQuat = new THREE.Quaternion();
 
           targetObj.getWorldPosition(worldPos);
           targetObj.getWorldQuaternion(worldQuat);
+
+          console.log("📌 Donmuş Pozisyon:", worldPos);
+          console.log("📌 Donmuş Rotasyon:", worldQuat);
 
           frozenObj.position.copy(worldPos);
           frozenObj.quaternion.copy(worldQuat);
 
           frozenModelEntity.setAttribute('scale', targetModelEntity.getAttribute('scale'));
 
+          // Donmuş modeli görünür yap
           frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
+
+          // Marker modelini gizle
           targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
 
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
+
         } else {
+          // Donmuş modeli gizle, marker modelini aç
           frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
+
           targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
 
           freezeButton.innerText = 'Dondur';
           isFrozen = false;
