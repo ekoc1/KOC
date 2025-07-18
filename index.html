@@ -1,76 +1,3 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <title>MindAR - Model Dondur/Çöz</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <style>
-    html, body {
-      margin: 0; padding: 0; overflow: hidden; height: 100%;
-    }
-    canvas, a-scene {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    }
-    #freezeButton {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      z-index: 9999;
-      padding: 12px 25px;
-      background-color: #2196f3;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      user-select: none;
-    }
-    #infoMessage {
-      position: fixed;
-      top: 70px;
-      left: 20px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-size: 14px;
-      display: none;
-      user-select: none;
-    }
-  </style>
-</head>
-<body>
-
-  <button id="freezeButton" disabled>Dondur</button>
-  <div id="infoMessage"></div>
-
-  <a-scene mindar-image="imageTargetSrc: ./qrkod.mind;" embedded>
-
-    <a-assets>
-      <a-asset-item id="model" src="./model.glb"></a-asset-item>
-    </a-assets>
-
-    <!-- Işıklar -->
-    <a-light type="ambient" color="#fff"></a-light>
-    <a-light type="directional" color="#fff" position="1 1 1"></a-light>
-
-    <a-camera look-controls="enabled: false" position="0 0 0"></a-camera>
-
-    <!-- Marker ile takip edilen model -->
-    <a-entity mindar-image-target="targetIndex: 0" id="targetWrapper">
-      <a-gltf-model id="modelEntity" src="#model" scale="5 5 5"></a-gltf-model>
-    </a-entity>
-
-    <!-- Donmuş model -->
-    <a-entity id="frozenModel" visible="false">
-      <a-gltf-model id="frozenModelEntity" src="#model" scale="5 5 5"></a-gltf-model>
-    </a-entity>
-
-  </a-scene>
-
 <script>
   window.onload = () => {
     const freezeButton = document.getElementById('freezeButton');
@@ -91,10 +18,7 @@
         console.log("📍 Marker bulundu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'true');
-          targetObj.visible = true;
-
           frozenModel.setAttribute('visible', 'false');
-          frozenObj.visible = false;
         }
       });
 
@@ -102,48 +26,41 @@
         console.log("❌ Marker kayboldu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'false');
-          targetObj.visible = false;
         } else {
-          // Donmuş model görünür kalmalı
           frozenModel.setAttribute('visible', 'true');
-          frozenObj.visible = true;
-
           targetWrapper.setAttribute('visible', 'false');
-          targetObj.visible = false;
         }
       });
 
       freezeButton.addEventListener('click', () => {
         if (!isFrozen) {
-          // Lokal pozisyon ve rotasyon al
-          const localPos = targetObj.position.clone();
-          const localQuat = targetObj.quaternion.clone();
+          // Pozisyon ve rotasyonu dünya koordinatları olarak alıyoruz
+          const worldPos = new THREE.Vector3();
+          const worldQuat = new THREE.Quaternion();
 
-          frozenObj.position.copy(localPos);
-          frozenObj.quaternion.copy(localQuat);
+          targetObj.getWorldPosition(worldPos);
+          targetObj.getWorldQuaternion(worldQuat);
 
-          // Model ölçeğini aynen ayarla
+          frozenObj.position.copy(worldPos);
+          frozenObj.quaternion.copy(worldQuat);
+
+          // Model ölçeğini eşitle
           const scale = targetModelEntity.getAttribute('scale');
           frozenModelEntity.setAttribute('scale', scale);
 
           // Donmuş modeli görünür yap
-          frozenModel.setAttribute('visible', true);
-          frozenObj.visible = true;
+          frozenModel.setAttribute('visible', 'true');
 
           // Marker modelini gizle
-          targetWrapper.setAttribute('visible', false);
-          targetObj.visible = false;
+          targetWrapper.setAttribute('visible', 'false');
 
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
 
         } else {
           // Donmuş modeli gizle, marker modelini göster
-          frozenModel.setAttribute('visible', false);
-          frozenObj.visible = false;
-
-          targetWrapper.setAttribute('visible', true);
-          targetObj.visible = true;
+          frozenModel.setAttribute('visible', 'false');
+          targetWrapper.setAttribute('visible', 'true');
 
           freezeButton.innerText = 'Dondur';
           isFrozen = false;
@@ -152,6 +69,3 @@
     });
   };
 </script>
-
-</body>
-</html>
