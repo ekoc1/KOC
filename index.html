@@ -74,18 +74,9 @@
 <script>
   window.onload = () => {
     const freezeButton = document.getElementById('freezeButton');
-    const infoMessage = document.getElementById('infoMessage');
     const sceneEl = document.querySelector('a-scene');
 
     let isFrozen = false;
-
-    const showMessage = (msg, duration = 2000) => {
-      infoMessage.innerText = msg;
-      infoMessage.style.display = 'block';
-      setTimeout(() => {
-        infoMessage.style.display = 'none';
-      }, duration);
-    };
 
     sceneEl.addEventListener('loaded', () => {
       const targetWrapper = document.getElementById('targetWrapper');
@@ -96,19 +87,13 @@
       const targetObj = targetWrapper.object3D;
       const frozenObj = frozenModel.object3D;
 
-      // Model tamamen yüklendiğinde butonu aktif yap
-      targetModelEntity.addEventListener('model-loaded', () => {
-        freezeButton.disabled = false;
-        showMessage("Model yüklendi. Artık dondurabilirsiniz.");
-      });
-
       targetWrapper.addEventListener('targetFound', () => {
         console.log("📍 Marker bulundu!");
         if (!isFrozen) {
-          targetWrapper.setAttribute('visible', true);
+          targetWrapper.setAttribute('visible', 'true');
           targetObj.visible = true;
 
-          frozenModel.setAttribute('visible', false);
+          frozenModel.setAttribute('visible', 'false');
           frozenObj.visible = false;
         }
       });
@@ -116,36 +101,30 @@
       targetWrapper.addEventListener('targetLost', () => {
         console.log("❌ Marker kayboldu!");
         if (!isFrozen) {
-          targetWrapper.setAttribute('visible', false);
+          targetWrapper.setAttribute('visible', 'false');
           targetObj.visible = false;
         } else {
-          // Dondurulmuş model görünür kalmalı
-          // requestAnimationFrame ile görünürlüğü güvenli ayarlıyoruz
-          requestAnimationFrame(() => {
-            frozenModel.setAttribute('visible', true);
-            frozenObj.visible = true;
-          });
+          // Donmuş model görünür kalmalı
+          frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
+
+          targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
         }
       });
 
       freezeButton.addEventListener('click', () => {
-        console.log("🔘 Butona basıldı!");
-
         if (!isFrozen) {
-          // Marker modelin dünya konum ve yönelimini al
-          const worldPos = new THREE.Vector3();
-          const worldQuat = new THREE.Quaternion();
+          // Lokal pozisyon ve rotasyon al
+          const localPos = targetObj.position.clone();
+          const localQuat = targetObj.quaternion.clone();
 
-          targetObj.getWorldPosition(worldPos);
-          targetObj.getWorldQuaternion(worldQuat);
+          frozenObj.position.copy(localPos);
+          frozenObj.quaternion.copy(localQuat);
 
-          console.log("📌 Donmuş Pozisyon:", worldPos);
-          console.log("📌 Donmuş Rotasyon:", worldQuat);
-
-          frozenObj.position.copy(worldPos);
-          frozenObj.quaternion.copy(worldQuat);
-
-          frozenModelEntity.setAttribute('scale', targetModelEntity.getAttribute('scale'));
+          // Model ölçeğini aynen ayarla
+          const scale = targetModelEntity.getAttribute('scale');
+          frozenModelEntity.setAttribute('scale', scale);
 
           // Donmuş modeli görünür yap
           frozenModel.setAttribute('visible', true);
@@ -156,11 +135,10 @@
           targetObj.visible = false;
 
           freezeButton.innerText = 'Çöz';
-          showMessage("Model donduruldu.");
           isFrozen = true;
 
         } else {
-          // Donmuş modeli gizle, marker modelini aç
+          // Donmuş modeli gizle, marker modelini göster
           frozenModel.setAttribute('visible', false);
           frozenObj.visible = false;
 
@@ -168,7 +146,6 @@
           targetObj.visible = true;
 
           freezeButton.innerText = 'Dondur';
-          showMessage("Model takibe geri döndü.");
           isFrozen = false;
         }
       });
