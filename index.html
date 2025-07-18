@@ -65,7 +65,10 @@
         console.log("📍 Marker bulundu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
+
           frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
         }
       });
 
@@ -73,35 +76,59 @@
         console.log("❌ Marker kayboldu!");
         if (!isFrozen) {
           targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
         } else {
+          // Dondurulmuş model görünür kalmalı
           frozenModel.setAttribute('visible', 'true');
-          targetWrapper.setAttribute('visible', 'false');
+          frozenObj.visible = true;
         }
       });
 
       freezeButton.addEventListener('click', () => {
-        console.log("Butona basıldı!");
+        console.log("🔘 Butona basıldı!");
+
         if (!isFrozen) {
+          // Marker modelin dünya konum ve yönelimini al
           const worldPos = new THREE.Vector3();
           const worldQuat = new THREE.Quaternion();
 
           targetObj.getWorldPosition(worldPos);
           targetObj.getWorldQuaternion(worldQuat);
 
-          frozenObj.position.copy(worldPos);
-          frozenObj.quaternion.copy(worldQuat);
+          // Quaternion'u Euler açılarına çevir
+          const euler = new THREE.Euler();
+          euler.setFromQuaternion(worldQuat, 'XYZ');
 
+          // Pozisyon ve rotasyonu ayarla
+          frozenModel.setAttribute('position', `${worldPos.x} ${worldPos.y} ${worldPos.z}`);
+          frozenModel.setAttribute('rotation', {
+            x: THREE.MathUtils.radToDeg(euler.x),
+            y: THREE.MathUtils.radToDeg(euler.y),
+            z: THREE.MathUtils.radToDeg(euler.z),
+          });
+
+          // Ölçek kopyala
           const scale = targetModelEntity.getAttribute('scale');
-          frozenModelEntity.setAttribute('scale', scale);
+          frozenModelEntity.object3D.scale.set(scale.x, scale.y, scale.z);
 
+          // Donmuş modeli görünür yap
           frozenModel.setAttribute('visible', 'true');
+          frozenObj.visible = true;
+
+          // Marker modelini gizle
           targetWrapper.setAttribute('visible', 'false');
+          targetObj.visible = false;
 
           freezeButton.innerText = 'Çöz';
           isFrozen = true;
+
         } else {
+          // Donmuş modeli gizle, marker modelini aç
           frozenModel.setAttribute('visible', 'false');
+          frozenObj.visible = false;
+
           targetWrapper.setAttribute('visible', 'true');
+          targetObj.visible = true;
 
           freezeButton.innerText = 'Dondur';
           isFrozen = false;
